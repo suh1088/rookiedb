@@ -171,20 +171,47 @@ class LeafNode extends BPlusNode {
     public Optional<Pair<DataBox, Long>> put(DataBox key, RecordId rid) {
         // TODO(proj2): implement
         
-
+        if(keys.contains(key)){
+            throw new BPlusTreeException("Duplicate key");
+        }
+        
+        int idx = 0;
+        
+        while(idx < keys.size() && keys.get(idx).compareTo(key) < 0){
+            idx++;
+        }
+        
+        keys.add(idx, key);
+        rids.add(idx, rid);
+        
         
         //case 1: nothing happen
         if(keys.size() <= 2 * metadata.getOrder()){
-            
+            sync();
+            return Optional.empty();
         }
         
         
         //case 2: split!
         else{
+            int d = metadata.getOrder();
+            List<DataBox> Rk = new ArrayList<>(keys.subList(d, keys.size()));
+            List<RecordId> Rr = new ArrayList<>(rids.subList(d, rids.size()));
             
+            LeafNode nleaf = new LeafNode(metadata, bufferManager, Rk, Rr, this.rightSibling, treeContext);
+            
+            keys = new ArrayList<>(keys.subList(0, d));
+            rids = new ArrayList<>(rids.subList(0, d));
+            
+            this.rightSibling = Optional.of(nleaf.getPage().getPageNum());
+            
+            sync();
+            
+            return Optional.of(
+                new Pair<>(Rk.get(0), nleaf.getPage().getPageNum())
+            );
         }
-
-        return Optional.empty();
+        // return Optional.empty();
     }
 
     // See BPlusNode.bulkLoad.
@@ -202,8 +229,24 @@ class LeafNode extends BPlusNode {
     @Override
     public void remove(DataBox key) {
         // TODO(proj2): implement
+        
+        // if(!keys.contains(key)){
+        //     throw new BPlusTreeException("Duplicate key");
+        // }
+        
+        int idx = 0;
+        
+        while(idx < keys.size() && keys.get(idx).compareTo(key) < 0){
+            idx++;
+        }
+        
+        keys.remove(idx);
+        rids.remove(idx);
+        
+        sync();
+        
 
-        return;
+        // return;
     }
 
     // Iterators ///////////////////////////////////////////////////////////////

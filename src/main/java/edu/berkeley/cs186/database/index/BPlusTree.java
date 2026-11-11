@@ -1,5 +1,15 @@
 package edu.berkeley.cs186.database.index;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
 import edu.berkeley.cs186.database.TransactionContext;
 import edu.berkeley.cs186.database.common.Pair;
 import edu.berkeley.cs186.database.concurrency.LockContext;
@@ -10,11 +20,6 @@ import edu.berkeley.cs186.database.databox.Type;
 import edu.berkeley.cs186.database.io.DiskSpaceManager;
 import edu.berkeley.cs186.database.memory.BufferManager;
 import edu.berkeley.cs186.database.table.RecordId;
-
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.util.*;
 
 /**
  * A persistent B+ tree.
@@ -146,8 +151,12 @@ public class BPlusTree {
         LockUtil.ensureSufficientLockHeld(lockContext, LockType.NL);
 
         // TODO(proj2): implement
+        
+        LeafNode leaf = root.get(key);
+        
+        return leaf.getKey(key);
 
-        return Optional.empty();
+        // return Optional.empty();
     }
 
     /**
@@ -202,8 +211,12 @@ public class BPlusTree {
         LockUtil.ensureSufficientLockHeld(lockContext, LockType.NL);
 
         // TODO(proj2): Return a BPlusTreeIterator.
+        
+        LeafNode leaf = root.getLeftmostLeaf();
+        
+        return new BPlusTreeIterator(leaf);
 
-        return Collections.emptyIterator();
+        // return Collections.emptyIterator();
     }
 
     /**
@@ -423,19 +436,39 @@ public class BPlusTree {
     // Iterator ////////////////////////////////////////////////////////////////
     private class BPlusTreeIterator implements Iterator<RecordId> {
         // TODO(proj2): Add whatever fields and constructors you want here.
+        
+        private LeafNode leaf;
+        private Iterator<RecordId> iter;
+
+        public BPlusTreeIterator(LeafNode leaf) {
+            this.leaf = leaf;
+            this.iter = leaf.scanAll();
+        }
 
         @Override
         public boolean hasNext() {
             // TODO(proj2): implement
+            
+            while (!iter.hasNext()) {
+                Optional<LeafNode> sibling = leaf.getRightSibling();
+                if (!sibling.isPresent()) {
+                    return false;
+                }
 
-            return false;
+                leaf = sibling.get();
+                iter = leaf.scanAll();
+            }
+            return true;
         }
 
         @Override
         public RecordId next() {
             // TODO(proj2): implement
-
-            throw new NoSuchElementException();
+            
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            return iter.next();
         }
     }
 }
