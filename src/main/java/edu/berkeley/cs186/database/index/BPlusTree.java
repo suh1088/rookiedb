@@ -270,6 +270,12 @@ public class BPlusTree {
         // Note: You should NOT update the root variable directly.
         // Use the provided updateRoot() helper method to change
         // the tree's root if the old root splits.
+        
+        Optional<Pair<DataBox, Long>> result = root.put(key, rid);
+        
+        if(result.isPresent()){
+            
+        }
 
         return;
     }
