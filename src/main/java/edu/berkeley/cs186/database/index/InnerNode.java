@@ -122,8 +122,45 @@ class InnerNode extends BPlusNode {
         
         BPlusNode child = getChild(idx);
         
-        return child.put(key, rid);
+        Optional<Pair<DataBox, Long>> result = child.put(key, rid);
         
+        if(result.isEmpty()){
+            return Optional.empty();
+        }
+        
+        Pair<DataBox, Long> split = result.get();
+        keys.add(idx, split.getFirst());
+        children.add(idx + 1, split.getSecond());
+        
+        //case 1: nothing happen
+        if(keys.size() <= 2 * metadata.getOrder()){
+            sync();
+            return Optional.empty();
+        }
+        
+        
+        //case 2: split!
+        else{
+            int d = metadata.getOrder();
+            DataBox splitKey = keys.get(d);
+            List<DataBox> Rk = new ArrayList<>(keys.subList(d+1, keys.size()));
+            List<Long> Rc = new ArrayList<>(children.subList(d + 1, children.size()));
+            
+            // LeafNode nleaf = new LeafNode(metadata, bufferManager, Rk, Rr, this.rightSibling, treeContext);
+            InnerNode innerNode = new InnerNode(metadata, bufferManager, Rk, Rc, treeContext);
+            
+            
+            keys = new ArrayList<>(keys.subList(0, d));
+            children = new ArrayList<>(children.subList(0, d+1));
+            
+            // this.rightSibling = Optional.of(nleaf.getPage().getPageNum());
+            
+            sync();
+            
+            return Optional.of(
+                new Pair<>(splitKey, innerNode.getPage().getPageNum())
+            );
+        }
 
         // return Optional.empty();
     }
