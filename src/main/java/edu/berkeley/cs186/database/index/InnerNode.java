@@ -169,7 +169,7 @@ class InnerNode extends BPlusNode {
     @Override
     public Optional<Pair<DataBox, Long>> bulkLoad(Iterator<Pair<DataBox, RecordId>> data,
             float fillFactor) {
-        // TODO(proj2): implement
+        // TODO(proj2): implement - done
         
         while(data.hasNext()){
             BPlusNode child = getChild(children.size() - 1);

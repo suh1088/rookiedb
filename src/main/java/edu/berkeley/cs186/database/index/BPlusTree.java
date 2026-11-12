@@ -318,11 +318,15 @@ public class BPlusTree {
         // TODO(proj4_integration): Update the following line
         LockUtil.ensureSufficientLockHeld(lockContext, LockType.NL);
 
-        // TODO(proj2): implement
+        // TODO(proj2): implement - done
         // Note: You should NOT update the root variable directly.
         // Use the provided updateRoot() helper method to change
         // the tree's root if the old root splits.
         
+        if (scanAll().hasNext()) {
+            throw new BPlusTreeException("Cannot bulk load a nonempty tree");
+        }
+
         while(data.hasNext()){
             Optional<Pair<DataBox, Long>> result = root.bulkLoad(data, fillFactor);
             
