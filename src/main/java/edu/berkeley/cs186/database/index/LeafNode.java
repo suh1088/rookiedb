@@ -234,11 +234,12 @@ class LeafNode extends BPlusNode {
         //     throw new BPlusTreeException("Duplicate key");
         // }
         
-        int idx = 0;
-        
-        while(idx < keys.size() && keys.get(idx).compareTo(key) < 0){
-            idx++;
+      
+        int idx = keys.indexOf(key);
+        if (idx == -1) {
+            return;
         }
+    
         
         keys.remove(idx);
         rids.remove(idx);

@@ -274,10 +274,22 @@ public class BPlusTree {
         Optional<Pair<DataBox, Long>> result = root.put(key, rid);
         
         if(result.isPresent()){
+            Pair<DataBox, Long> split = result.get();
+            
+            List<DataBox> keys = new ArrayList<>();
+            keys.add(split.getFirst());
+
+            List<Long> children = new ArrayList<>();
+            children.add(root.getPage().getPageNum()); // 기존 루트: 분할 후 왼쪽
+            children.add(split.getSecond()); 
+            
+            InnerNode newRoot = new InnerNode(metadata, bufferManager, keys, children, lockContext);
+            
+            updateRoot(newRoot);
             
         }
 
-        return;
+        // return;
     }
 
     /**
@@ -328,8 +340,11 @@ public class BPlusTree {
         LockUtil.ensureSufficientLockHeld(lockContext, LockType.NL);
 
         // TODO(proj2): implement
+        
+        root.remove(key);
+        
 
-        return;
+        // return;
     }
 
     // Helpers /////////////////////////////////////////////////////////////////
