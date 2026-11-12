@@ -342,8 +342,6 @@ public class BPlusTree {
         // TODO(proj2): implement
         
         root.remove(key);
-        
-
         // return;
     }
 
@@ -468,26 +466,31 @@ public class BPlusTree {
 
         @Override
         public boolean hasNext() {
-            // TODO(proj2): implement
-            
-            while (!iter.hasNext()) {
-                Optional<LeafNode> sibling = leaf.getRightSibling();
-                if (!sibling.isPresent()) {
-                    return false;
-                }
-
-                leaf = sibling.get();
-                iter = leaf.scanAll();
+            if (iter.hasNext()) {
+                return true;
             }
-            return true;
+
+            // Check later leaves without changing this iterator's position.
+            Optional<LeafNode> sibling = leaf.getRightSibling();
+            while (sibling.isPresent()) {
+                LeafNode candidate = sibling.get();
+                if (candidate.scanAll().hasNext()) {
+                    return true;
+                }
+                sibling = candidate.getRightSibling();
+            }
+            return false;
         }
 
         @Override
         public RecordId next() {
-            // TODO(proj2): implement
-            
-            if (!hasNext()) {
-                throw new NoSuchElementException();
+            while (!iter.hasNext()) {
+                Optional<LeafNode> sibling = leaf.getRightSibling();
+                if (!sibling.isPresent()) {
+                    throw new NoSuchElementException();
+                }
+                leaf = sibling.get();
+                iter = leaf.scanAll();
             }
             return iter.next();
         }
