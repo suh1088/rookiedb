@@ -151,7 +151,7 @@ class LeafNode extends BPlusNode {
     // See BPlusNode.get.
     @Override
     public LeafNode get(DataBox key) {
-        // TODO(proj2): implement
+        // TODO(proj2): implement - done
         
         return this;
 
@@ -161,7 +161,7 @@ class LeafNode extends BPlusNode {
     // See BPlusNode.getLeftmostLeaf.
     @Override
     public LeafNode getLeftmostLeaf() {
-        // TODO(proj2): implement
+        // TODO(proj2): implement - done
         
         return this;
     }
@@ -169,7 +169,7 @@ class LeafNode extends BPlusNode {
     // See BPlusNode.put.
     @Override
     public Optional<Pair<DataBox, Long>> put(DataBox key, RecordId rid) {
-        // TODO(proj2): implement
+        // TODO(proj2): implement - done
         
         if(keys.contains(key)){
             throw new BPlusTreeException("Duplicate key");
@@ -220,15 +220,44 @@ class LeafNode extends BPlusNode {
             float fillFactor) {
         // TODO(proj2): implement
         
+        int target = (int) Math.ceil(2 * metadata.getOrder() * fillFactor);
         
-
-        return Optional.empty();
+        while(keys.size() < target && data.hasNext()){
+            Pair<DataBox, RecordId> next = data.next();
+            keys.add(next.getFirst());
+            rids.add(next.getSecond());
+        }
+        
+        if(!data.hasNext()){
+            sync();
+            return Optional.empty();
+        }
+        
+        Pair<DataBox, RecordId> next = data.next();
+            
+        List<DataBox> nk=new ArrayList<>();
+        List<RecordId> nr=new ArrayList<>();
+        
+        nk.add(next.getFirst());
+        nr.add(next.getSecond());
+        
+        LeafNode nl = new LeafNode(metadata, bufferManager, nk, nr, Optional.empty(), treeContext);
+        
+        this.rightSibling = Optional.of(nl.getPage().getPageNum());
+        
+        sync();
+        
+        return Optional.of(
+            new Pair<>(next.getFirst(), nl.getPage().getPageNum())
+        );
+        
+        // return Optional.empty();
     }
 
     // See BPlusNode.remove.
     @Override
     public void remove(DataBox key) {
-        // TODO(proj2): implement
+        // TODO(proj2): implement - done
         
         // if(!keys.contains(key)){
         //     throw new BPlusTreeException("Duplicate key");
@@ -438,7 +467,7 @@ class LeafNode extends BPlusNode {
      */
     public static LeafNode fromBytes(BPlusTreeMetadata metadata, BufferManager bufferManager,
                                      LockContext treeContext, long pageNum) {
-        // TODO(proj2): implement
+        // TODO(proj2): implement - done
         // Note: LeafNode has two constructors. To implement fromBytes be sure to
         // use the constructor that reuses an existing page instead of fetching a
         // brand new one.

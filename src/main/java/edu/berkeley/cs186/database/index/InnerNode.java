@@ -85,7 +85,7 @@ class InnerNode extends BPlusNode {
     // See BPlusNode.get.
     @Override
     public LeafNode get(DataBox key) {
-        // TODO(proj2): implement
+        // TODO(proj2): implement - done
         
         int idx=0;
         
@@ -102,7 +102,7 @@ class InnerNode extends BPlusNode {
     @Override
     public LeafNode getLeftmostLeaf() {
         assert(children.size() > 0);
-        // TODO(proj2): implement
+        // TODO(proj2): implement - done
         
         BPlusNode child = getChild(0);
 
@@ -112,7 +112,7 @@ class InnerNode extends BPlusNode {
     // See BPlusNode.put.
     @Override
     public Optional<Pair<DataBox, Long>> put(DataBox key, RecordId rid) {
-        // TODO(proj2): implement
+        // TODO(proj2): implement - done
         
         int idx=0;
         
@@ -170,14 +170,60 @@ class InnerNode extends BPlusNode {
     public Optional<Pair<DataBox, Long>> bulkLoad(Iterator<Pair<DataBox, RecordId>> data,
             float fillFactor) {
         // TODO(proj2): implement
+        
+        while(data.hasNext()){
+            BPlusNode child = getChild(children.size() - 1);
+            
+            Optional<Pair<DataBox, Long>> result = child.bulkLoad(data, fillFactor);
+            
+            if(result.isEmpty()){
+                sync();
+                return Optional.empty();
+            }
+            
+            Pair<DataBox, Long> split = result.get();
+            keys.add(split.getFirst());
+            children.add(split.getSecond());
+            
+            // //case 1: nothing happen
+            // if(keys.size() <= 2 * metadata.getOrder()){
+            //     sync();
+            //     return Optional.empty();
+            // }
+            
+            
+            //case 2: split!
+            if(keys.size() > 2 * metadata.getOrder()){
+                int d = metadata.getOrder();
+                DataBox splitKey = keys.get(d);
+                List<DataBox> Rk = new ArrayList<>(keys.subList(d+1, keys.size()));
+                List<Long> Rc = new ArrayList<>(children.subList(d + 1, children.size()));
+                
+                // LeafNode nleaf = new LeafNode(metadata, bufferManager, Rk, Rr, this.rightSibling, treeContext);
+                InnerNode innerNode = new InnerNode(metadata, bufferManager, Rk, Rc, treeContext);
+                
+                
+                keys = new ArrayList<>(keys.subList(0, d));
+                children = new ArrayList<>(children.subList(0, d+1));
+                
+                // this.rightSibling = Optional.of(nleaf.getPage().getPageNum());
+                
+                sync();
+                
+                return Optional.of(
+                    new Pair<>(splitKey, innerNode.getPage().getPageNum())
+                );
+            }
 
+        }
+        sync();
         return Optional.empty();
     }
 
     // See BPlusNode.remove.
     @Override
     public void remove(DataBox key) {
-        // TODO(proj2): implement
+        // TODO(proj2): implement - done
         
         int idx=0;
         
